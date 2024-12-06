@@ -1,4 +1,3 @@
-<?php ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -63,8 +62,42 @@
           </div>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          <button type="button"  class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
           <button onclick="addUser()" data-bs-dismiss="modal" type="button" class="btn btn-primary">Submit</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="example1Modal" tabindex="-1" aria-labelledby="exampleModalLabel">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h1 class="modal-title fs-5" id="exampleModalLabel">Update Details</h1>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label for="name" class="form-label">Name</label>
+            <input type="text" class="form-control" id="updatename" placeholder="Name" autocomplete="off" required>
+          </div>
+          <div class="mb-3">
+            <label for="email" class="form-label">Email address</label>
+            <input type="email" class="form-control" id="updateemail" placeholder="Email" autocomplete="off" required>
+          </div>
+          <div class="mb-3">
+            <label for="phone" class="form-label">Phone</label>
+            <input type="text" class="form-control" id="updatephone" placeholder="Phone" autocomplete="off" required>
+          </div>
+          <div class="mb-3">
+            <label for="address" class="form-label">Address</label>
+            <input type="text" class="form-control" id="updateaddress" placeholder="Address" autocomplete="off" required>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button"  class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-primary" id="updatebtn" onclick="updateUser()">Update</button>
+          <input type="hidden" id="id">
         </div>
       </div>
     </div>
@@ -76,42 +109,36 @@
 
   <script>
 
-    //delete user function
+ 
     function deleteUser(userId) {
-   if (confirm("Are you sure you want to delete this user?")) {
-    $.ajax({
-      url: 'delete_user.php',  
-      type: 'GET',
-      data: {
-        userId: userId  
-      },
-      success: function(response) {
-        // Parse the response to ensure it's a JSON object
-        let data = JSON.parse(response); // Ensure the response is an object
+      if (confirm("Are you sure you want to delete this user?")) {
+        $.ajax({
+          url: 'delete_user.php',  
+          type: 'GET',
+          data: {
+            userId: userId  
+          },
+          success: function(response) {
 
-        console.log(data);  
-        alert(data.status);
+            let data = JSON.parse(response); 
 
-        if (data.status == 'success') {
-          // Remove the user row from the table
-          $("#userRow" + userId).remove(); 
-          alert(data.message); // Show success message
-        } else {
-          alert("Error deleting the user: " + data.message); 
-        }
-      },
-      error: function(xhr, status, error) {
-        alert("An error occurred while deleting the user.");
+            console.log(data);  
+
+
+            if (data.status == 'success') {
+
+              $("#userRow" + userId).remove(); 
+              alert(data.message); 
+            } else {
+              alert("Error deleting the user: " + data.message); 
+            }
+          },
+          error: function(xhr, status, error) {
+            alert("An error occurred while deleting the user.");
+          }
+        });
       }
-    });
-  }
-}
-
-
-
-
-
-
+    }
 
     //fetch data function
     function fetchData() {
@@ -124,19 +151,95 @@
 
           data.forEach((user, index) => {
             let row = `<tr id="userRow${user.id}">
-              <td>${index + 1}</td>
+              <td>${user.id}-${index + 1}</td>
               <td>${user.name}</td>
               <td>${user.email}</td>
               <td>${user.phone}</td>
               <td>${user.address}</td>
               <td>
-                <button class="btn btn-info">Edit</button>
+                <button class="btn btn-info" data-bs-toggle="modal" data-bs-target="#example1Modal" onclick="editUser(${user.id})">Edit</button>
                 <button class="btn btn-danger" onclick="deleteUser(${user.id})">Delete</button>
-          
               </td>
             </tr>`;
             tableBody.append(row);
           });
+        }
+      });
+    }
+    //update user function
+     
+    function updateUser() {
+
+      let updatedName = $("#updatename").val();
+      let updatedEmail = $("#updateemail").val();
+      let updatedPhone = $("#updatephone").val();
+      let updatedAddress = $("#updateaddress").val();
+      let id = $("#id").val();
+
+      // Log the values for debugging
+      console.log(updatedName);
+      console.log(updatedEmail);
+      console.log(updatedPhone);
+      console.log(updatedAddress);
+
+      // Validate if fields are empty
+      if (updatedName.trim() === "" || updatedEmail.trim() === "" || updatedPhone.trim() === "" || updatedAddress.trim() === "") {
+          alert("Please fill all fields");
+          return; // Prevent the AJAX call if fields are empty
+      }
+
+      console.log("im here!");
+
+      // Proceed with AJAX if validation passes
+      $.ajax({
+        url: 'update.php',
+        type: 'POST',  // Use POST for sending data to the server
+        data: {
+            updatedName: updatedName,
+            updatedEmail: updatedEmail,
+            updatedPhone: updatedPhone,
+            updatedAddress: updatedAddress,
+            id: id,
+        },
+        
+        success: function(response) {
+            console.log("Success response:", response);  // Log the server's response for debugging
+            alert(response.message);  // Assuming the server sends a message in the response
+            fetchData();  // Refresh the table or data after update
+        },
+        error: function(xhr, status, error) {
+            console.error("Error occurred:", error);  // Log the error to the console
+            console.error("Status:", status);  // Log the status to the console
+            console.error("XHR response:", xhr.responseText);  // Log the response text from the server
+            alert("An error occurred while updating the user. Please try again.");
+        }
+      });
+    }
+
+
+    
+
+
+
+
+
+    //edit user function
+    function editUser(id){
+      $.ajax({
+        url: 'edituser.php',
+        type: 'get',
+        data: {
+          userId: id
+        },
+        success:function(response) {
+            $("#updatename").val(response.name);
+            $("#updateemail").val(response.email);
+            $("#updatephone").val(response.phone);
+            $("#updateaddress").val(response.address);
+            $("#id").val(id);
+        },
+        error:function(error){
+          console.error("error",error);
         }
       });
     }
